@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f7fb">
+  <title>Weather — your day, in view</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar"><div class="brand"><span class="brand-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg></span>weatherly</div><div class="top-note">A little sunshine for your day</div></header>
+    <form class="search-wrap" id="search-form"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input class="search" id="city-input" placeholder="Search for a city right now..." aria-label="Search for a city" autocomplete="off"><button class="search-btn" id="search-button" type="submit">Search</button></form>
+    <div class="error" id="error" role="status"></div>
+    <section class="dashboard" aria-live="polite">
+      <article class="card hero" id="weather-hero" data-sky="clear"><div class="hero-head"><div><div class="location" id="location">Getting your weather…</div><div class="date" id="date"></div></div><div class="condition-pill"><span class="sunny-dot"></span><span id="condition">Current weather</span></div></div><div class="main-weather"><div class="temperature" id="temperature">--°</div><div class="weather-icon" id="weather-icon">🌤️</div></div><div class="summary" id="summary">A fresh look at the day ahead</div><div class="highlow" id="highlow">H: --° &nbsp; L: --°</div><div class="sky-mood" id="sky-mood"><span class="mood-sparkle">✦</span><span><small>YOUR SKY'S TAKE</small><b>Checking the atmosphere…</b></span></div><div class="updated" id="updated">Weather data by Open-Meteo</div></article>
+      <article class="card side"><div class="card-title">Today's highlights</div><div class="card-subtitle">A few details about the day</div><div class="details-grid">
+        <div class="detail"><div class="detail-icon">💧</div><div><div class="detail-label">Humidity</div><div class="detail-value" id="humidity">--%</div></div></div>
+        <div class="detail"><div class="detail-icon">🌬️</div><div><div class="detail-label">Wind</div><div class="detail-value" id="wind">-- km/h</div></div></div>
+        <div class="detail"><div class="detail-icon">☀️</div><div><div class="detail-label">Feels like</div><div class="detail-value" id="feels">--°</div></div></div>
+        <div class="detail"><div class="detail-icon">🌧️</div><div><div class="detail-label">Rain chance</div><div class="detail-value" id="rain">--%</div></div></div>
+      </div></article>
+      <article class="card forecast"><div class="forecast-heading"><div><div class="card-title">Next 5 days</div><div class="card-subtitle">Plan a little ahead</div></div></div><div class="days" id="days"></div></article>
+      <article class="card sky-guide">
+        <div class="guide-heading"><div class="guide-avatar">✦</div><div><div class="card-title">Ask your Sky Guide</div><div class="card-subtitle">Curious about the weather? Let’s make sense of it.</div></div><span class="guide-status"><i></i> AI weather guide</span></div>
+        <div class="guide-suggestions"><button type="button" data-question="Why is the weather like this today?">Why this weather?</button><button type="button" data-question="Will the weather change over the next few days?">Is weather changing?</button><button type="button" data-question="What should I wear today?">What should I wear?</button></div>
+        <div class="chat-messages" id="chat-messages" aria-live="polite"><div class="chat-message assistant-message">Hi! Ask me about today’s weather or how the forecast may change. I’ll use the latest weather data shown above. <small>AI can make mistakes; forecasts can change.</small></div></div>
+        <form class="chat-form" id="chat-form"><input id="chat-input" type="text" maxlength="500" placeholder="Ask a question about the weather…" aria-label="Ask your Sky Guide" autocomplete="off"><button type="submit" id="chat-send" aria-label="Send question">Send <span aria-hidden="true">↗</span></button></form>
+      </article>
+    </section><div class="footer">Simple forecasts, wherever you are.</div>
+  </main>
+<script>
+  const $=id=>document.getElementById(id);
+  const codes={0:['Clear sky','☀️'],1:['Mostly clear','🌤️'],2:['Partly cloudy','⛅'],3:['Overcast','☁️'],45:['Foggy','🌫️'],48:['Icy fog','🌫️'],51:['Light drizzle','🌦️'],53:['Drizzle','🌦️'],55:['Heavy drizzle','🌧️'],61:['Light rain','🌦️'],63:['Rain','🌧️'],65:['Heavy rain','🌧️'],71:['Light snow','🌨️'],73:['Snow','❄️'],75:['Heavy snow','❄️'],80:['Showers','🌦️'],81:['Rain showers','🌧️'],82:['Heavy showers','🌧️'],95:['Thunderstorm','⛈️'],96:['Thunderstorm','⛈️'],99:['Thunderstorm','⛈️']};
+  const describe=code=>codes[code]||['Mostly cloudy','☁️'];
+  function skyAdvice(code,temp,wind){
+    if([95,96,99].includes(code))return ['storm','Storm-watch skies. Keep plans flexible and stay cozy indoors.'];
+    if([51,53,55,61,63,65,80,81,82].includes(code))return ['rain','A rainy kind of day. A light jacket or umbrella will come in handy.'];
+    if([71,73,75].includes(code))return ['snow','A crisp, wintry sky. Bundle up before heading out.'];
+    if([45,48].includes(code))return ['fog','Low-visibility skies. Take it slow if you’re out and about.'];
+    if(temp>=36)return ['heat','The sun means business. Find shade and keep some water close.'];
+    if(wind>=30)return ['wind','A breezy one today. Secure light layers and enjoy the fresh air.'];
+    if(code<=1)return ['clear','Blue-sky energy. It’s a lovely day to get outside.'];
+    return ['cloud','Soft-sky kind of day. Comfortable weather for taking the long way.'];
+  }
+  const dateFmt=new Intl.DateTimeFormat(undefined,{weekday:'long',month:'long',day:'numeric'});
+  $('date').textContent=dateFmt.format(new Date());
+  let weatherContext=null;const chatHistory=[];
+  function setError(msg){$('error').textContent=msg}
+  async function loadWeather(name){
+    setError('');$('search-button').innerHTML='<span class="spinner"></span>';$('search-button').disabled=true;
+    try{
+      let lat,lon,label=name;
+      if(name==='__geo__'){
+        const pos=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{timeout:8000}));lat=pos.coords.latitude;lon=pos.coords.longitude;label='Your location';
+      }else{
+        const g=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1&language=en&format=json`);const gd=await g.json();
+        if(!gd.results?.length)throw new Error('We couldn’t find that city. Try another name.');
+        const place=gd.results[0];lat=place.latitude;lon=place.longitude;label=[place.name,place.admin1,place.country].filter((v,i,a)=>v&&a.indexOf(v)===i).join(', ');
+      }
+      const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=celsius&wind_speed_unit=kmh&timezone=auto&forecast_days=5`);
+      if(!r.ok)throw new Error('Weather is unavailable right now. Please try again.');const d=await r.json(),c=d.current,day=d.daily;
+      const [desc,icon]=describe(c.weather_code);const [mood,advice]=skyAdvice(c.weather_code,c.temperature_2m,c.wind_speed_10m);$('weather-hero').dataset.sky=mood;$('sky-mood').querySelector('b').textContent=advice;$('location').textContent=label;$('temperature').textContent=`${Math.round(c.temperature_2m)}°`;$('weather-icon').textContent=icon;$('condition').textContent=desc;$('summary').textContent=`${desc} with a high of ${Math.round(day.temperature_2m_max[0])}°`;$('highlow').innerHTML=`H: <b>${Math.round(day.temperature_2m_max[0])}°</b> &nbsp; L: <b>${Math.round(day.temperature_2m_min[0])}°</b>`;
+      weatherContext={location:label,timezone:d.timezone,current:{temperatureC:c.temperature_2m,feelsLikeC:c.apparent_temperature,humidityPercent:c.relative_humidity_2m,windKmh:c.wind_speed_10m,precipitationMm:c.precipitation,condition:desc},forecast:day.time.map((date,i)=>({date,condition:describe(day.weather_code[i])[0],highC:day.temperature_2m_max[i],lowC:day.temperature_2m_min[i],rainChancePercent:day.precipitation_probability_max[i]}))};
+      $('humidity').textContent=`${c.relative_humidity_2m}%`;$('wind').textContent=`${Math.round(c.wind_speed_10m)} km/h`;$('feels').textContent=`${Math.round(c.apparent_temperature)}°`;$('rain').textContent=`${day.precipitation_probability_max[0]??0}%`;
+      const weekdays=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];$('days').innerHTML=day.time.map((date,i)=>{const [w,ic]=describe(day.weather_code[i]);const dt=new Date(`${date}T12:00:00`);return `<div class="day"><div class="day-name">${i===0?'Today':weekdays[dt.getDay()]}</div><div class="day-icon" title="${w}">${ic}</div><div class="day-temp">${Math.round(day.temperature_2m_max[i])}° <span>${Math.round(day.temperature_2m_min[i])}°</span></div></div>`}).join('');
+    }catch(e){setError(e.message==='User denied Geolocation'?'Location access was denied. Search for a city instead.':e.message||'Could not load weather. Please try again.')}finally{$('search-button').textContent='Search';$('search-button').disabled=false}
+  }
+  $('search-form').addEventListener('submit',e=>{e.preventDefault();const city=$('city-input').value.trim();if(city)loadWeather(city)});
+  function addChatMessage(text,role){const message=document.createElement('div');message.className=`chat-message ${role==='user'?'user-message':'assistant-message'}`;message.textContent=text;$('chat-messages').append(message);$('chat-messages').scrollTop=$('chat-messages').scrollHeight;return message}
+  async function askGuide(question){if(!question.trim())return;if(!weatherContext){addChatMessage('I’m still loading the weather. Please try again in a moment.','assistant');return}addChatMessage(question,'user');chatHistory.push({role:'user',content:question});$('chat-input').value='';$('chat-send').disabled=true;const pending=addChatMessage('Looking at the latest forecast…','assistant');pending.classList.add('thinking');try{const response=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({weather:weatherContext,history:chatHistory.slice(-8)})});const contentType=response.headers.get('content-type')||'';if(!contentType.includes('application/json'))throw new Error('The AI chat API is not running here. Stop the old server, run `npm start`, then open http://localhost:3000.');const data=await response.json();if(!response.ok)throw new Error(data.error||'The Sky Guide could not answer just now.');pending.textContent=data.answer;chatHistory.push({role:'assistant',content:data.answer});if(chatHistory.length>8)chatHistory.splice(0,chatHistory.length-8)}catch(error){pending.textContent=error.message==='Failed to fetch'?'Start the app server with `npm start` and open http://localhost:3000.':error.message}finally{pending.classList.remove('thinking');$('chat-send').disabled=false;$('chat-input').focus()}}
+  $('chat-form').addEventListener('submit',e=>{e.preventDefault();askGuide($('chat-input').value.trim())});document.querySelectorAll('.guide-suggestions button').forEach(button=>button.addEventListener('click',()=>askGuide(button.dataset.question)));
+  loadWeather('Delhi');
+</script>
+</body>
+</html>
